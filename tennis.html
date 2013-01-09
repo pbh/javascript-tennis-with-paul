@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Hello World</title>
+<title>Grids Grids Grids!</title>
 <style>
 
 
@@ -27,10 +27,18 @@ $(function () {
         c.fillStyle = "rgba(255, 255, 255, 0.05)"
         c.fillRect(0, 0, width, height)
 
+	// let's make a proper 10x10 grid
+	var x_dec = Math.floor((Math.random()*10))/10.0;
+        var y_dec = Math.floor((Math.random()*10))/10.0
+	var x_sz = width*0.1
+	var y_sz = height*0.1
+
         // let's decide where to place a circle
-        var x = width * Math.random()
-        var y = height * Math.random()
-        var size = 100 * Math.random()
+        var x = width * x_dec + 0.5 * x_sz 
+        var y = height * y_dec + 0.5 * y_sz
+
+	var max_size = Math.min(x_sz, y_sz)/2.0;
+        var size = max_size * Math.random();
 
         // now let's actually draw the circle
         c.beginPath()
