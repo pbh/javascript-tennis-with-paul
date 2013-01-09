@@ -18,7 +18,7 @@ $(function () {
     var height = body.height();
     var canvas = $('<canvas/>').attr('width', width).attr('height', height)
     body.append(canvas)
-    var c = canvas.get()[0].getContext("2d")
+    var ctx = canvas.get()[0].getContext("2d")
 
     // keep track of where the mouse is
     var mouseX = 0
@@ -28,40 +28,89 @@ $(function () {
         mouseY = e.pageY
     })
 
+    var drawGrid = function (grid_rc) {
+	ctx.clearRect(0, 0, width, height);
+	
+	x_width = width / grid_rc[0].length;
+        y_height = height / grid_rc.length;
+	
+	for (var r=0; r < grid_rc.length; r++) {
+	    for (var c=0; c < grid_rc[0].length; c++) {
+		x = c * x_width + x_width * 0.5;
+		y = r * y_height + y_height * 0.5;
+		max_rad = Math.min(x_width,y_height) * 0.5;
+
+		if (grid_rc[r][c] > 0) {
+		    ctx.beginPath();
+        	    ctx.arc(x, y, max_rad * grid_rc[r][c], 0, Math.PI*2, true);
+        	    ctx.closePath();
+        	    ctx.fillStyle = "black";
+        	    ctx.fill();
+	        }
+	    }
+	}
+        // now let's actually draw the circle
+    };
+
+    var makeGrid = function (num_rows, num_cols) {
+	var grid_rc = new Array();
+
+	for (var i = 0; i < num_rows; i++) {
+	    grid_rc[i] = new Array();
+
+	    for (var j = 0; j < num_cols; j++) {
+	        grid_rc[i][j] = 0;
+	    }
+	}
+
+	return grid_rc;
+    };
+
+    var mouseToGridX = function (grid_rc) {
+	x_width = width / grid_rc[0].length;
+        return Math.floor(mouseX / x_width);
+    };
+
+    var mouseToGridY = function (grid_rc) {
+        y_height = height / grid_rc.length;
+	return Math.floor(mouseY / y_height);
+    }
+
+    var getNormPdf = function (x, mu, sigma) {
+	return (1/(sigma * Math.sqrt(2 * Math.PI))) *
+	  Math.exp(-1 * Math.pow(x-mu,2) / Math.pow(sigma,2));
+    }
+
     setInterval(function () {
         // this code will run over and over again...
 
-        // this paints just a bit of whiteness over everything
-        c.fillStyle = "rgba(255, 255, 255, 0.05)"
-        c.fillRect(0, 0, width, height)
+	var grid_rc = makeGrid(100,100);
 
-        // first we'll decide where to place a circle, favoring the mouse's position
-        var x = mouseX + (width * Math.pow(Math.random(), 5)) * (Math.random() < 0.5 ? -1 : 1)
-        var y = mouseY + (height * Math.pow(Math.random(), 5)) * (Math.random() < 0.5 ? -1 : 1)
+	var grid_x = mouseToGridX(grid_rc);
+	var grid_y = mouseToGridY(grid_rc);
 
-        // ...keep it in-bounds
-        if (x > width) x = width - (x - width)
-        if (y > height) y = height - (y - height)
-        if (x < 0) x = -x
-        if (y < 0) y = -y
+	var heights = new Array();
 
-        // snap it to a 10x10 grid
-        x = (Math.floor(x / (width / 10)) + 0.5) * (width / 10)
-        y = (Math.floor(y / (height / 10)) + 0.5) * (height / 10)
+	max_pdf = 0;
 
-        // let's get the size right
-        var x_sz = width*0.1
-        var y_sz = height*0.1
+	for (var x=0; x < grid_rc[0].length; x++) {
+            heights[x] = getNormPdf(x, grid_x, grid_y) * grid_y;
+	    max_pdf = Math.max(getNormPdf(x, grid_x, grid_y), max_pdf);
+	}
 
-        var max_size = Math.min(x_sz, y_sz)/2.0;
-        var size = max_size * Math.random();
+	for (var x=0; x < grid_rc[0].length; x++) {
+	    heights[x] = heights[x] / max_pdf;
+	}
 
-        // now let's actually draw the circle
-        c.beginPath()
-        c.arc(x, y, size, 0, Math.PI*2, true)
-        c.closePath()
-        c.fillStyle = "black"
-        c.fill()
+	for (var x=0; x < grid_rc[0].length; x++) {
+	    for (var y=0; y < grid_rc.length; y++) {
+	        if (y < heights[x]) {
+	            grid_rc[y][x] = 1;
+		}
+	    }
+	}
+
+	drawGrid(grid_rc);
     }, 50)
 })
 
