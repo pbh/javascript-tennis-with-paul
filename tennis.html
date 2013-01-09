@@ -20,6 +20,14 @@ $(function () {
     body.append(canvas)
     var c = canvas.get()[0].getContext("2d")
 
+    // keep track of where the mouse is
+    var mouseX = 0
+    var mouseY = 0
+    $('body').mousemove(function (e) {
+        mouseX = e.pageX
+        mouseY = e.pageY
+    })
+
     setInterval(function () {
         // this code will run over and over again...
 
@@ -27,17 +35,25 @@ $(function () {
         c.fillStyle = "rgba(255, 255, 255, 0.05)"
         c.fillRect(0, 0, width, height)
 
-	// let's make a proper 10x10 grid
-	var x_dec = Math.floor((Math.random()*10))/10.0;
-        var y_dec = Math.floor((Math.random()*10))/10.0
-	var x_sz = width*0.1
-	var y_sz = height*0.1
+        // first we'll decide where to place a circle, favoring the mouse's position
+        var x = mouseX + (width * Math.pow(Math.random(), 5)) * (Math.random() < 0.5 ? -1 : 1)
+        var y = mouseY + (height * Math.pow(Math.random(), 5)) * (Math.random() < 0.5 ? -1 : 1)
 
-        // let's decide where to place a circle
-        var x = width * x_dec + 0.5 * x_sz 
-        var y = height * y_dec + 0.5 * y_sz
+        // ...keep it in-bounds
+        if (x > width) x = width - (x - width)
+        if (y > height) y = height - (y - height)
+        if (x < 0) x = -x
+        if (y < 0) y = -y
 
-	var max_size = Math.min(x_sz, y_sz)/2.0;
+        // snap it to a 10x10 grid
+        x = (Math.floor(x / (width / 10)) + 0.5) * (width / 10)
+        y = (Math.floor(y / (height / 10)) + 0.5) * (height / 10)
+
+        // let's get the size right
+        var x_sz = width*0.1
+        var y_sz = height*0.1
+
+        var max_size = Math.min(x_sz, y_sz)/2.0;
         var size = max_size * Math.random();
 
         // now let's actually draw the circle
@@ -46,7 +62,7 @@ $(function () {
         c.closePath()
         c.fillStyle = "black"
         c.fill()
-    }, 100)
+    }, 50)
 })
 
 </script>
